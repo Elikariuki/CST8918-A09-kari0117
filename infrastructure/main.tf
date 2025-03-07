@@ -22,8 +22,7 @@ resource "azurerm_storage_account" "example" {
   account_replication_type = "LRS"       # LRS = Locally redundant storage
 }
 
-# Output the storage account primary access key
-output "storage_account_primary_access_key" {
+# Output the storage account primary access keyoutput "storage_account_primary_access_key" {
   value       = azurerm_storage_account.example.primary_access_key
   description = "The primary access key for the storage account"
   sensitive   = tru # Marks this output as sensitive
