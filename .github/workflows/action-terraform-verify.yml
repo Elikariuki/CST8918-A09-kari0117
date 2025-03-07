@@ -1,52 +1,31 @@
-name: Validate terraform fmt
-on:
-  pull_request:
-    branches:
-      - main
-      - master
-
-permissions:
-  id-token: write
-  contents: read
-
-jobs:
-  validate:
+terraform-validate:
     runs-on: ubuntu-latest
-    name: terraform fmt check
-    outputs:
-      CHECK_STATUS: "${{ env.CHECK_STATUS }}"
+    name: Terraform Validation
     steps:
       - uses: actions/checkout@v3
-        with:
-          fetch-depth: 2
-      - name: Fetch changed files
-        id: pr_files
-        uses: jitterbit/get-changed-files@v1
-        with:
-          format: "space-delimited"
-      - name: Configure terraform
+      - name: Setup Terraform
         uses: hashicorp/setup-terraform@v2
         with:
           terraform_version: 1.2.4
-      - name: Validate terraform fmt (added_modified)
+      - name: Terraform Init
         run: |
-          set +e
-
-          echo "CHECK_STATUS=0" >> $GITHUB_ENV
-
-          for changed_file in ${{ steps.pr_files.outputs.added_modified }}; do
-            echo "Checking terraform fmt on ${changed_file}..."
-
-            if [[ $changed_file == *.tf ]]; then
-              terraform fmt -check $changed_file
-              FMT_STATUS=$(echo $?)
-
-              if [[ $FMT_STATUS -ne 0 ]]; then
-                echo "❌ terraform fmt failed - ${changed_file}" >> $GITHUB_STEP_SUMMARY
-                echo "CHECK_STATUS=1" >> $GITHUB_ENV
-              fi
-            fi
-          done
-      - name: Process check
-        if: always()
-        run: exit $CHECK_STATUS
+          cd infrastructure
+          terraform init -backend=false
+      - name: Terraform Validate
+        run: |
+          cd infrastructure
+          terraform validate
+      - name: Run tflint
+        uses: terraform-linters/setup-tflint@v3
+        with:
+          tflint_version: v0.44.1
+      - name: Show version
+        run: tflint --version
+      - name: Init tflint
+        run: |
+          cd infrastructure
+          tflint --init
+      - name: Run tflint
+        run: |
+          cd infrastructure
+          tflint -f compact
