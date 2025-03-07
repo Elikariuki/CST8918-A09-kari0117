@@ -6,7 +6,7 @@ provider "azurerm" {
 
 # Create a resource group to contain the storage account
 resource "azurerm_resource_group" "example" {
-  name     = "example-resources"
+  name     = "kari0117-rg" # Resource group name must be globally unique
   location = "East US"
   tags = {
     environment = "dev"
@@ -26,5 +26,5 @@ resource "azurerm_storage_account" "example" {
 output "storage_account_primary_access_key" {
   value       = azurerm_storage_account.example.primary_access_key
   description = "The primary access key for the storage account"
-  sensitive   = true # Marks this output as sensitive
+  sensitive   = tru # Marks this output as sensitive
 }
